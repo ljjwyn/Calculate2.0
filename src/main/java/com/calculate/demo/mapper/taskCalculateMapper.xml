@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.calculate.demo.mapper.taskCalculateMapper">
+    <select id="getSum2" parameterType="String"  resultType="java.lang.Integer">
+             select count(*) from ${tableName}
+    </select>
+<select id="origin_set2" resultType="java.util.Map" parameterType="String">
+select * from information_schema.COLUMNS where TABLE_SCHEMA = (select database()) and TABLE_NAME=#{tableName}
+    </select>
+
+    <select id="selectAll"  resultType="java.util.Map">
+        select * from  ${_parameter}
+    </select>
+
+
+    <update id="createTable" parameterType="java.util.Map" statementType="STATEMENT">
+        create table ${tableName} (
+            ${PRI_Name} ${PRI_Type} primary key
+        <if test="columns.size>0">
+        ,
+        </if>
+        <foreach collection="columns" item="listItem" separator=",">
+            ${listItem} DOUBLE
+        </foreach>
+
+        <if test="tag.size>0">
+            ,
+        <foreach collection="tag" item="tagItem" separator=",">
+            ${tagItem} varchar(255)
+        </foreach>
+        </if>
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8
+     </update>
+
+    <insert id="saveTable" parameterType="java.util.Map">
+        insert into ${tableName} (
+            ${PRI_Name}
+        <if test="columns.size>0">
+            ,
+        </if>
+
+        <foreach collection="columns" item="item" index="index" separator=",">
+            ${index}
+        </foreach>
+        ) values (
+           ${PRI_Values}
+        <if test="columns.size>0">
+            ,
+        </if>
+            <foreach collection="columns"  item="item" index="index" separator=",">
+                <!--<if test="index==columns.length">-->
+                    <!--${item} int-->
+                <!--</if>-->
+                ${item}
+            </foreach>
+        )
+
+    </insert>
+
+    <select id="getGlobal" parameterType="String" resultType="java.lang.Double">
+        select ${global} from ${tableName}
+    </select>
+   <update id="updateTag" parameterType="String">
+       update ${tableName} set ${tag_name}=#{tag_value} where ${PRI_Name}=#{PRI_Value}
+   </update>
+
+</mapper>

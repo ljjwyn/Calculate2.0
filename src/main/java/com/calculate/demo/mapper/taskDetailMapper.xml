@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.calculate.demo.mapper.taskDetailMapper">
+    <select id="findByTaskId" parameterType="String" resultType="com.calculate.demo.entity.TaskDetail">
+    select * from taskDetail where taskId=#{taskId}
+</select>
+
+    <select id="findAll" resultType="com.calculate.demo.entity.TaskDetail">
+    select * from taskDetail
+</select>
+
+    <select id="findProcess" resultType="Double">
+        select taskProcessRate from taskDetail where taskId=#{taskId}
+    </select>
+
+    <insert id="insertAndReturnId" useGeneratedKeys="true" keyProperty="id" keyColumn="id"
+            parameterType="com.calculate.demo.entity.TaskDetail">
+        INSERT INTO taskDetail(taskId,taskDescription,taskName,timeCreate,databaseName,tableName,formulas,rules,taskProcessRate) VALUES(#{taskDetail.taskId},#{taskDetail.taskDescription},#{taskDetail.taskName},#{taskDetail.timeCreate},#{taskDetail.databaseName},#{taskDetail.tableName},#{taskDetail.formulas},#{taskDetail.rules},#{taskDetail.taskProcessRate})
+    </insert>
+    <update id="updateTableName" parameterType="com.calculate.demo.entity.TaskDetail">
+        update taskDetail set taskTableName=#{taskDetail.taskTableName},taskGlobalTableName=#{taskDetail.taskGlobalTableName} where id=#{taskDetail.id}
+    </update>
+
+    <update id="save_process" >
+       update taskDetail set taskProcessRate=#{process} where taskId=#{taskId}
+   </update>
+
+    <update id="completeTime" >
+    update  taskDetail set timeCompleted=#{completeTime} where taskId=#{taskId}
+    </update>
+</mapper>

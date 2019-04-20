@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html ng-app="indexApp">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap-theme.css" rel="stylesheet">
+    <link href="css/jquery-ui.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+    <style>
+        .data-viewer {
+            font-family: "courier new", arial, sans-serif;
+            font-size: 12px;
+        }
+
+        .focus {
+            background-color: #00AEAE;
+            color: #FFFFFF;
+        }
+    </style>
+
+    <script src="js/angular/1.6.3/angular.js"></script>
+    <script src="js/angular/1.6.3/angular-route.js"></script>
+    <script src="js/angular/1.6.3/angular-ui-router.js"></script>
+    <script src="js/angular/1.6.3/angular-file-upload.js"></script>
+    <script src="js/jquery-2.1.4.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery-ui.js"></script>
+    <script src="js/ie10-viewport-bug-workaround.js"></script>
+    <script src="js/ie-emulation-modes-warning.js"></script>
+    <script src="js/echarts.min.js"></script>
+    <script src="js/echarts-gl.min.js"></script>
+    <script src="ng/indexApp.js"></script>
+    <script src="ng/taskManagementCtrl.js"></script>
+    <title>画像计算任务管理</title>
+</head>
+<body ng-controller="taskManagementCtrl">
+<div class="container-fluid">
+    <h3 class="page-header" style="">画像任务管理
+        <a type="button"
+           class="btn btn-info btn-sm btn-block"
+           style="float: right; width: 10%"
+           href="task-configuration.html">新建画像任务
+        </a>
+    </h3>
+
+    <!-- 任务列表 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">任务列表</div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table
+                                    class="table table-bordered table-striped table-condensed table-hover"
+                                    ng-init="getDistributedClusteringTasks()">
+                                <thead>
+                                <tr class="default">
+                                    <th>任务 ID</th>
+                                    <th>任务名称</th>
+                                    <th>画像主体</th>
+                                    <th>计算模块</th>
+                                    <th>创建者</th>
+                                    <th>创建时间</th>
+                                    <th>完成时间</th>
+                                    <th>执行进度</th>
+                                    <th>是否完成</th>
+                                    <th colspan="2">操 作</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="task in taskList" ng-click="showTaskInfo(task)">
+                                    <td ng-class='{focus: task.taskId==focus}'>{{task.taskId}}</td>
+                                    <td>{{task.taskName}}</td>
+                                    <td>{{task.portraitSubject}}</td>
+                                    <td>{{task.calculateModule}}</td>
+                                    <td>{{task.creator}}</td>
+                                    <td>{{task.createTime | date:'yyyy-MM-dd HH:mm:ss'}}</td>
+                                    <td>{{task.finishTime | date:'yyyy-MM-dd HH:mm:ss'}}</td>
+                                    <td>{{task.progress}}</td>
+                                    <td>{{task.isFinished}}</td>
+                                    <td>
+                                        <button type="button"
+                                                class="btn btn-danger btn-xs btn-block"
+                                                ng-click="delTask(task)">删 除
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <button type="button"
+                                                class="btn btn-success btn-xs btn-block"
+                                                ng-click="startTask(task)">{{task.btnStatus}}
+                                        </button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-offset-10 col-md-2">
+                            <div class="form-group form-group-sm">
+                                <button type="button" class="btn btn-sm btn-block btn-default"
+                                        ng-click="getDistributedClusteringTasks()">
+                                    <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!--
+                        <div class="col-md-1">
+                            <div class="form-group form-group-sm">
+                                <button type="button" class="btn btn-sm btn-block btn-default"
+                                        ng-click="">
+                                    <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+                        -->
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">任务信息</div>
+                <div class="panel-body">
+                    <form class="form-horizontal">
+                        <div class="form-group form-group-sm">
+                            <label for="currentTask-taskId"
+                                   class="col-sm-2 control-label">基础信息</label>
+                            <div class="col-sm-2">
+                                <input type="text" class="form-control" id="currentTask-taskId"
+                                       placeholder="任务ID" ng-model="currentTask.taskId" disabled>
+                            </div>
+                            <div class="col-sm-4">
+                                <input type="text" class="form-control" id="currentTask-name"
+                                       placeholder="名称" ng-model="currentTask.taskName">
+                            </div>
+                            <div class="col-sm-2">
+                                <input type="text" class="form-control"
+                                       id="currentTask-calculateModule" placeholder="所属计算模块"
+                                       ng-model="currentTask.calculateModule" disabled>
+                            </div>
+                            <div class="col-sm-2">
+                                <input type="text" class="form-control"
+                                       id="currentTask-creator" placeholder="创建者"
+                                       ng-model="currentTask.creator">
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group-sm">
+                            <label for="currentTask-description"
+                                   class="col-sm-2 control-label">任务描述</label>
+                            <div class="col-md-10">
+									<textarea id="currentTask-description" class="form-control"
+                                              rows="4" placeholder="该任务的描述信息"
+                                              ng-model="currentTask.description"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group-sm">
+                            <label for="currentTask-description"
+                                   class="col-sm-2 control-label">数据路径</label>
+                            <div class="col-md-10">
+                                <div class="input-group">
+                                    <span class="input-group-addon" id="HDFS">分布式文件系统</span> <input
+                                        type="text" class="form-control"
+                                        placeholder="HDFS"
+                                        ng-model="currentTask.datasetPath"
+                                        aria-describedby="currentTask-datasetPath" disabled>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group-sm">
+                            <label for="currentTask-description"
+                                   class="col-sm-2 control-label">算法参数</label>
+                            <div class="col-md-10">
+                                <div class="form-group form-group-sm">
+                                    <div class="col-sm-6 col-md-6">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" id="kK">分组数</span> <input
+                                                type="text" class="form-control" placeholder="k"
+                                                ng-model="currentTask.kK" aria-describedby="kK" disabled>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6 col-md-6">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" id="kMeasure">距离测度</span>
+                                            <input type="text" class="form-control"
+                                                   placeholder="Measure" ng-model="currentTask.kMeasure"
+                                                   aria-describedby="kMeasure" disabled>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <div class="col-sm-6 col-md-6">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" id="kConvergenceDelta">收敛阈值</span>
+                                            <input type="text" class="form-control"
+                                                   placeholder="ConvergenceDelta"
+                                                   ng-model="currentTask.kConvergenceDelta"
+                                                   aria-describedby="kConvergenceDelta" disabled>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-6 col-md-6">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" id="kMaxIterations">最大迭代次数</span>
+                                            <input type="text" class="form-control"
+                                                   placeholder="MaxIterations"
+                                                   ng-model="currentTask.kMaxIterations"
+                                                   aria-describedby="kMaxIterations" disabled>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group form-group-sm">
+                                    <div class="col-sm-6 col-md-6">
+                                        <div class="input-group">
+												<span class="input-group-addon"
+                                                      id="kClassificationThreshold">分类阈值</span>
+                                            <input type="text" class="form-control"
+                                                   placeholder="ClassificationThreshold"
+                                                   ng-model="currentTask.kClassificationThreshold"
+                                                   aria-describedby="kClassificationThreshold" disabled>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group form-group-sm">
+                            <div class="col-md-offset-2 col-md-10">
+                                <button type="button" class="btn btn-sm btn-success"
+                                        ng-click="changeTaskInfo(currentTask)">修&nbsp;&nbsp; 改
+                                </button>
+                                <button type="button" class="btn btn-sm btn-info"
+                                        ng-click="getTaskOutputLabels(currentTask)" ng-disabled="!viewTaskBtnStatus">
+                                    查看任务输出
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row" ng-show="taskOuputDivVisible">
+        <div class="col-sm-12 col-md-12">
+            <div class="panel panel-info">
+                <div class="panel-heading">任务输出</div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">聚类类别标签</div>
+                                <div class="panel-body">
+                                    <table class="table table-bordered table-condensed">
+                                        <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>旧标签</th>
+                                            <th>新标签</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="(key, value) in currentTaskOutputLables">
+                                            <td>{{key}}</td>
+                                            <td>{{value}}</td>
+                                            <td><input type="text" class="form-control"
+                                                       ng-model="newValue" ng-blur="setLabelInput(key, newValue)"></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <button type="button" class="btn btn-sm btn-default"
+                                            ng-click="saveClusteringLabels(currentTask)">保存新定义标签
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-default"
+                                            ng-click="showClusterPredict()">{{predictPanelState}}类别预测
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-default"
+                                            ng-click="getFeaturesData(currentTask)">{{featurePanelState}}类别特征
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-default"
+                                            ng-click="getClusteringOutputRawData(currentTask)">{{outputPanelState}}输出数据
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-default"
+                                            ng-click="getDataVisualization(currentTask)">{{visualizationState}}数据可视化
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row" ng-show="clusterPredictedPanelVisible">
+                        <div class="col-md-12">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">类别预测</div>
+                                <div class="panel-body">
+                                    <div class="row">
+                                        <div ng-repeat="colName in featureMeta" class="col-md-2">
+                                            <input type="text" class="form-control" id="{{colName.name}}"
+                                                   ng-model="$parent.pointToPredict[$index]"
+                                                   placeholder="{{colName.name}}">
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            <button type="button" class="btn btn-sm btn-default"
+                                                    ng-click="clusterPredict(pointToPredict, currentTask)"
+                                                    style="margin-top: 20px">类别预测
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p ng-show="clusterPredictedDivVisible" style="margin-top: 20px">
+                                        根据聚类结果，预测出该条数据的类别为：{{predictedCluster.labelName}}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="panel panel-default" ng-show="clusterPredictedDivVisible">
+                                <div class="panel-heading">用户画像:{{predictedCluster.labelName}}</div>
+                                <div class="panel-body">
+                                    <radar id="radarChart" point="pointToPredict"
+                                           meta="featureMeta" features="featuresRawData" label=predictedCluster
+                                           style="margin-top: 20px"></radar>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div class="row" ng-show="dataFeaturesDivVisible">
+                        <div class="col-md-12">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">聚类类别特征</div>
+                                <div class="panel-body">
+                                    <table
+                                            class="table table-bordered table-striped table-condensed table-hover"
+                                    >
+                                        <thead>
+                                        <tr class="default">
+                                            <th rowspan="2">类别</th>
+                                            <th ng-repeat="colName in featureMeta" colspan="3">{{colName.name}}</th>
+                                        </tr>
+                                        <tr class="default" ng-bind-html="thHtml |trustHtml">
+                                        </tr>
+                                        </thead>
+                                        <tbody ng-bind-html="featuresHtml |trustHtml">
+                                        </tbody>
+
+                                    </table>
+
+                                    <div class="col-md-4" ng-repeat="colName in featureMeta">
+
+                                        <feature-chart id="main{{$index}}" data="featuresRawData" meta="featureMeta"
+                                                       label="newTaskOutputLables"
+                                                       style="margin-bottom: 20px"></feature-chart>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" ng-show="dataOuputDivVisible">
+                        <div class="col-md-12">
+                            <!--	<textarea class="form-control data-viewer" id="taskDescription"
+                                    rows="15" placeholder="输出数据"
+                                    ng-model="currentTaskOutputRawData"></textarea>
+                                    -->
+                            <div class="panel panel-default">
+                                <div class="panel-heading">聚类输出数据抽样显示</div>
+                                <div class="panel-body">
+                                    <table
+                                            class="table table-bordered table-striped table-condensed table-hover"
+                                    >
+                                        <thead>
+                                        <tr class="default">
+                                            <th ng-repeat="colName in meta">{{colName.name}}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="data in items">
+                                            <td ng-repeat="colValue in data track by $index">{{colValue}}</td>
+                                        </tr>
+                                        </tbody>
+
+                                    </table>
+                                </div>
+                                <div class="panel-footer" align="left" style="height: 55px">
+                                    <ul class="pagination" style="margin-top: 0px">
+                                        <li>
+                                            <a ng-click="Previous()">
+                                                <span>上一页</span>
+                                            </a>
+                                        </li>
+                                        <li ng-repeat="page in pageList" ng-class="{active: isActivePage(page)}">
+                                            <a ng-click="selectPage(page)">{{ page }}</a>
+                                        </li>
+                                        <li>
+                                            <a ng-click="Next()">
+                                                <span>下一页</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row" ng-show="taskChartDivVisible">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">可视化</div>
+                <div class="panel-body">
+                    <echarts id="abc" abc-directive legend="legend" data="data"
+                             style="width: 1000px;height:400px;"></echarts>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
