@@ -35,7 +35,7 @@ public class Connector {
 		}
 	}
 
-	public ArrayList<String> showTables() throws Exception{
+	public ArrayList<String> showTables(String dbName) throws Exception{
 
 		ArrayList<String> tableName = new ArrayList<String>();
 		if(conn != null && !conn.isClosed()){
@@ -44,7 +44,7 @@ public class Connector {
 			while (rs.next()) {
 				String schema = rs.getString(1);
 				System.out.println(schema);
-				if (schema.equals("jck_basic_db")){
+				if (schema.equals(dbName)){
 					String name = rs.getString(3);
 					tableName.add(name);
 				}

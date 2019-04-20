@@ -51,7 +51,7 @@ public class MySQLController {
 		else{
 			Connector connector = new Connector();
 			connector.connect(map.get("ip"), map.get("port"), map.get("username"), map.get("password"), map.get("dbName"));
-			ArrayList<String> tableName = connector.showTables();
+			ArrayList<String> tableName = connector.showTables(map.get("dbName"));
 			System.out.println(tableName);
 			result.put("data", tableName);
 			connector.disconnect();
